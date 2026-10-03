@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fala Carioca</title>
+<style>
+  :root{
+    --bg:#fdf8f0; --card:#ffffff; --ink:#1d2a2a; --muted:#5f6b6b;
+    --accent:#0a8f6a; --accent2:#f2b705; --sea:#1b6ca8; --line:#e7e0d3;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#111816; --card:#1a2421; --ink:#eef3f1; --muted:#9db0aa;
+           --accent:#2fc796; --accent2:#f5c842; --sea:#5aa9e6; --line:#2a3632; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  header{padding:28px 16px 8px;max-width:820px;margin:0 auto}
+  h1{margin:0;font-size:28px}
+  h1 span{color:var(--accent)}
+  h2{font-size:18px;margin:22px 0 10px}
+  .sub{color:var(--muted);margin:4px 0 0}
+  .bar{max-width:820px;margin:14px auto 0;padding:0 16px;display:flex;gap:8px;flex-wrap:wrap}
+  .bar button{border:1px solid var(--line);background:var(--card);color:var(--ink);
+       padding:8px 14px;border-radius:999px;cursor:pointer;font-size:14px}
+  .bar button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .bar.levels button.on{background:var(--sea);border-color:var(--sea)}
+  main{max-width:820px;margin:0 auto;padding:16px}
+  .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:14px;margin-bottom:12px}
+  .progress{height:6px;background:var(--line);border-radius:6px;overflow:hidden;flex:1;min-width:120px}
+  .progress>div{height:100%;background:var(--accent);transition:width .3s}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+  .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .pt{font-size:22px;font-weight:700}
+  .en{color:var(--muted);margin-top:2px}
+  .rows{display:grid;grid-template-columns:140px 1fr auto;gap:8px 12px;margin-top:14px;align-items:center}
+  .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .ipa{font-family:ui-monospace,Menlo,monospace}
+  .coll{color:var(--sea);font-weight:600}
+  .note{margin-top:12px;font-size:14px;color:var(--muted);border-left:3px solid var(--accent2);padding-left:10px}
+  .play{border:none;background:var(--accent);color:#fff;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:13px;white-space:nowrap}
+  .play.alt{background:var(--sea)}
+  .chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .words{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+  .word{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .word .w{font-size:18px;font-weight:700}
+  .word .p{font-size:14px;margin-top:6px}
+  .word .btns{display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap}
+  .quiz .q{font-size:20px;font-weight:600;margin:6px 0 14px}
+  .opts{display:grid;gap:8px}
+  .opts button{text-align:left;padding:12px;border:1px solid var(--line);background:var(--card);
+       color:var(--ink);border-radius:10px;font-size:16px;cursor:pointer}
+  .opts button.ok{background:#d6f5e8;border-color:var(--accent);color:#0c4d39}
+  .opts button.no{background:#fbe0dc;border-color:#d4553f;color:#7a2416}
+  .big{border:none;background:var(--accent);color:#fff;border-radius:10px;padding:10px 16px;font-size:15px;cursor:pointer;margin-top:12px}
+  .sounds li{margin-bottom:8px}
+  @media (max-width:560px){ .rows{grid-template-columns:1fr auto} .rows .lbl{grid-column:1 / -1;margin-top:6px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Fala <span>Carioca</span></h1>
+  <p class="sub">Everyday Brazilian Portuguese, the way it sounds in Rio.</p>
+</header>
+<div class="bar levels" id="levels"></div>
+<div class="bar" id="modes">
+  <button data-view="learn" class="on">Learn</button>
+  <button data-view="quiz">Quiz</button>
+  <button data-view="listen">Listening</button>
+  <button data-view="sounds">Rio sounds</button>
+</div>
+<main id="app"></main>
+
+<script>
+// =====================================================================
+// CONTENT — each level has 5 phrases and 10 words.
+// To add a level: copy one { ... } block and change the contents.
+// collWritten = how it's said casually (written), coll = how that sounds.
+// For words, leave collWritten/coll empty ("") when there's no shortcut.
+// =====================================================================
+const LEVELS = [
+{
+  name:"1 · Iniciante", desc:"Survival: greet, thank, get by.",
+  phrases:[
+    { pt:"E aí, beleza?", en:"Hey, what's up? / All good?", ipa:"[i aˈi beˈlezɐ]",
+      full:"ee ah-EE, beh-LEH-zah?", collWritten:"Iaí, beleza?", coll:"yah-EE, b'LEH-zah?",
+      note:"The go-to greeting. Answer with “Beleza!” or “Tranquilo!”." },
+    { pt:"Obrigado!", en:"Thank you!", ipa:"[obɾiˈɡadu]",
+      full:"oh-bree-GAH-doo!", collWritten:"Brigado!", coll:"bree-GAH-doo!",
+      note:"Women say “obrigada”. The first O often disappears. Even more casual: “Valeu!”." },
+    { pt:"Não sei.", en:"I don't know.", ipa:"[nɐ̃w ˈsej]",
+      full:"nowng SAY", collWritten:"Num sei.", coll:"noong SAY",
+      note:"Before a verb, “não” often shrinks to “num”. Very casual: “Sei lá” (dunno)." },
+    { pt:"Está bom.", en:"Okay. / Fine.", ipa:"[iʃˈta ˈbõ]",
+      full:"eesh-TAH BOHNG", collWritten:"Tá bom.", coll:"tah BOHNG",
+      note:"Nobody says “está bom” in conversation. You'll hear “Tá bom” or just “Tá” all day." },
+    { pt:"Com licença.", en:"Excuse me (to pass / get attention).", ipa:"[kõ liˈsẽsɐ]",
+      full:"kohng lee-SEHN-sah", collWritten:"Licença.", coll:"lee-SEHN-sah",
+      note:"Use it on a crowded bus or to get past someone. The “com” is usually dropped." }
+  ],
+  words:[
+    { pt:"oi", en:"hi", full:"OY", collWritten:"", coll:"" },
+    { pt:"por favor", en:"please", full:"poor fah-VOHR", collWritten:"pur favô", coll:"poo fah-VOH" },
+    { pt:"sim", en:"yes", full:"SEENG", collWritten:"é", coll:"EH" },
+    { pt:"não", en:"no / not", full:"NOWNG", collWritten:"num", coll:"NOONG" },
+    { pt:"você", en:"you", full:"voh-SEH", collWritten:"cê", coll:"SEH" },
+    { pt:"água", en:"water", full:"AH-gwah", collWritten:"", coll:"" },
+    { pt:"aqui", en:"here", full:"ah-KEE", collWritten:"", coll:"" },
+    { pt:"onde", en:"where", full:"OHN-djee", collWritten:"", coll:"" },
+    { pt:"quanto", en:"how much", full:"KWAHN-too", collWritten:"", coll:"" },
+    { pt:"legal", en:"cool / nice", full:"leh-GOW", collWritten:"", coll:"" }
+  ]
+},
+{
+  name:"2 · Básico", desc:"Getting around: plans, places, prices.",
+  phrases:[
+    { pt:"Onde você está?", en:"Where are you?", ipa:"[ˈõdʒi voˈse iʃˈta]",
+      full:"OHN-djee voh-SEH eesh-TAH?", collWritten:"Cê tá onde?", coll:"seh TAH OHN-djee?",
+      note:"Two classic shortcuts: você → cê, está → tá. Speakers also move “onde” to the end." },
+    { pt:"Vamos embora!", en:"Let's go!", ipa:"[ˈvɐ̃muʃ ẽˈbɔɾɐ]",
+      full:"VAH-moosh ehm-BOH-rah!", collWritten:"Bora!", coll:"BOH-rah!",
+      note:"Hear the Carioca “sh” on the final S of vamos. In speech it collapses to “Bora!”." },
+    { pt:"Pode deixar!", en:"Leave it to me! / I've got it.", ipa:"[ˈpɔdʒi dejˈʃaʁ]",
+      full:"POH-djee day-SHAHR!", collWritten:"Pó deixá!", coll:"POH day-SHAH!",
+      note:"“De” sounds like “djee” in Rio. The final R of verbs is usually dropped." },
+    { pt:"Estou chegando.", en:"I'm almost there. / On my way.", ipa:"[iʃˈtow ʃeˈɡɐ̃du]",
+      full:"eesh-TOH sheh-GAHN-doo", collWritten:"Tô chegano.", coll:"toh sheh-GAH-noo",
+      note:"Estou → tô, and -ndo often becomes -no. Classic text while still at home." },
+    { pt:"Quanto é?", en:"How much is it?", ipa:"[ˈkwɐ̃tu ˈɛ]",
+      full:"KWAHN-too EH?", collWritten:"Quant'é?", coll:"KWAHN-teh?",
+      note:"Use it at the beach kiosk or the feira. “Quanto custa?” also works." }
+  ],
+  words:[
+    { pt:"para", en:"for / to", full:"PAH-rah", collWritten:"pra", coll:"PRAH" },
+    { pt:"está", en:"is (right now)", full:"eesh-TAH", collWritten:"tá", coll:"TAH" },
+    { pt:"estou", en:"I am (right now)", full:"eesh-TOH", collWritten:"tô", coll:"TOH" },
+    { pt:"casa", en:"house / home", full:"KAH-zah", collWritten:"", coll:"" },
+    { pt:"praia", en:"beach", full:"PRAI-ah", collWritten:"", coll:"" },
+    { pt:"hoje", en:"today", full:"OH-zhee", collWritten:"", coll:"" },
+    { pt:"amanhã", en:"tomorrow", full:"ah-mah-NYAHNG", collWritten:"", coll:"" },
+    { pt:"depois", en:"later / after", full:"deh-POISH", collWritten:"dipois", coll:"djee-POISH" },
+    { pt:"agora", en:"now", full:"ah-GOH-rah", collWritten:"'gora", coll:"GOH-rah" },
+    { pt:"dinheiro", en:"money", full:"djee-NYAY-roo", collWritten:"dinhero", coll:"djee-NYEH-roo" }
+  ]
+},
+{
+  name:"3 · Intermediário", desc:"Real conversation: fillers and shortcuts.",
+  phrases:[
+    { pt:"Para onde você vai?", en:"Where are you going?", ipa:"[ˈpaɾɐ ˈõdʒi voˈse ˈvaj]",
+      full:"PAH-rah OHN-djee voh-SEH VAI?", collWritten:"Pronde cê vai?", coll:"PROHN-djee seh VAI?",
+      note:"Para → pra, and “pra onde” melts into “pronde”. Half the syllables disappear." },
+    { pt:"Deixa eu ver.", en:"Let me see.", ipa:"[ˈdejʃɐ ew ˈveʁ]",
+      full:"DAY-shah EH-oo VEHR", collWritten:"Xô vê.", coll:"SHOH VEH",
+      note:"“Deixa eu” fuses into “xô” (sounds like “show”), and the R of ver disappears." },
+    { pt:"Valeu, meu irmão!", en:"Thanks, bro!", ipa:"[vaˈlew mew iʁˈmɐ̃w]",
+      full:"vah-LEH-oo, MEH-oo eeh-MOWNG!", collWritten:"Valeu, mermão!", coll:"vah-LEW, meh-MOWNG!",
+      note:"“Mermão” is pure Rio. R before a consonant sounds like a breathy English H." },
+    { pt:"Nada a ver!", en:"No way! / That makes no sense.", ipa:"[ˈnadɐ a ˈveʁ]",
+      full:"NAH-dah ah VEHR!", collWritten:"Nada a vê!", coll:"NAH-dah VEH!",
+      note:"Used when something is irrelevant or untrue. The two A's merge into one." },
+    { pt:"Estou com fome.", en:"I'm hungry.", ipa:"[iʃˈtow kõ ˈfɔmi]",
+      full:"eesh-TOH kohng FOH-mee", collWritten:"Tô cum fome.", coll:"toh koong FOH-mee",
+      note:"Same pattern for “tô com sede” (thirsty) and “tô com sono” (sleepy)." }
+  ],
+  words:[
+    { pt:"a gente", en:"we (lit. the people)", full:"ah ZHEN-chee", collWritten:"", coll:"" },
+    { pt:"cara", en:"dude / guy", full:"KAH-rah", collWritten:"", coll:"" },
+    { pt:"tipo", en:"like (filler)", full:"CHEE-poo", collWritten:"", coll:"" },
+    { pt:"então", en:"so / then", full:"ehn-TOWNG", collWritten:"tão", coll:"TOWNG" },
+    { pt:"mesmo", en:"really / same", full:"MEZH-moo", collWritten:"", coll:"" },
+    { pt:"porque", en:"because", full:"poor-KEH", collWritten:"purquê", coll:"poo-KEH" },
+    { pt:"coisa", en:"thing", full:"KOY-zah", collWritten:"", coll:"" },
+    { pt:"nada", en:"nothing", full:"NAH-dah", collWritten:"", coll:"" },
+    { pt:"demais", en:"too much / awesome", full:"djee-MAISH", collWritten:"", coll:"" },
+    { pt:"muito", en:"very / a lot", full:"MWEEN-too", collWritten:"mó", coll:"MOH" }
+  ]
+},
+{
+  name:"4 · Avançado", desc:"Sound like a Carioca: Rio slang.",
+  phrases:[
+    { pt:"Caraca, que maneiro!", en:"Wow, that's so cool!", ipa:"[kaˈɾakɐ ki maˈnejɾu]",
+      full:"kah-RAH-kah, kee mah-NAY-roo!", collWritten:"Caraca, qui manêro!", coll:"kah-RAH-kah, kee mah-NEH-roo!",
+      note:"“Caraca” = wow, “maneiro” = cool. Both are very Rio." },
+    { pt:"Estou bolado.", en:"I'm upset / annoyed.", ipa:"[iʃˈtow boˈladu]",
+      full:"eesh-TOH boh-LAH-doo", collWritten:"Tô bolado.", coll:"toh boh-LAH-doo",
+      note:"Rio slang. “Bolado com você” = upset with you. Can also mean impressed." },
+    { pt:"Partiu praia!", en:"Let's hit the beach!", ipa:"[paʁˈtʃiw ˈpɾajɐ]",
+      full:"pahr-CHEE-oo PRAI-ah!", collWritten:"Partiu praia!", coll:"pah-CHEW PRAI-ah!",
+      note:"“Partiu + place” = let's go there now. Works with anything: “Partiu almoço!”." },
+    { pt:"Vou dar um pulo lá.", en:"I'll pop over there.", ipa:"[vow daʁ ũ ˈpulu ˈla]",
+      full:"VOH dahr oong POO-loo LAH", collWritten:"Vô dá um pulo lá.", coll:"voh DAHM POO-loo LAH",
+      note:"Literally “I'll give a jump there”. “Dar um” glides into one sound." },
+    { pt:"O que é isso!", en:"No way! / Don't mention it!", ipa:"[u ki ˈɛ ˈisu]",
+      full:"oo kee EH EE-soo!", collWritten:"Qué isso!", coll:"KEH EE-soo!",
+      note:"Reaction to surprise, or a modest reply when someone thanks or compliments you." }
+  ],
+  words:[
+    { pt:"maneiro", en:"cool", full:"mah-NAY-roo", collWritten:"manêro", coll:"mah-NEH-roo" },
+    { pt:"bolado", en:"annoyed / upset", full:"boh-LAH-doo", collWritten:"", coll:"" },
+    { pt:"caraca", en:"wow!", full:"kah-RAH-kah", collWritten:"", coll:"" },
+    { pt:"mané", en:"fool / idiot", full:"mah-NEH", collWritten:"", coll:"" },
+    { pt:"parada", en:"thing / stuff", full:"pah-RAH-dah", collWritten:"", coll:"" },
+    { pt:"sinistro", en:"insane (good or bad)", full:"see-NEESH-troo", collWritten:"", coll:"" },
+    { pt:"irado", en:"awesome", full:"ee-RAH-doo", collWritten:"", coll:"" },
+    { pt:"vacilar", en:"to mess up / let someone down", full:"vah-see-LAHR", collWritten:"vacilá", coll:"vah-see-LAH" },
+    { pt:"zoar", en:"to tease / mess around", full:"zoh-AHR", collWritten:"zoá", coll:"zoh-AH" },
+    { pt:"galera", en:"the crowd / the gang", full:"gah-LEH-rah", collWritten:"", coll:"" }
+  ]
+}
+];
+
+// ---------- STATE (saved in this browser) ----------
+const KEY = "fala-carioca-v2";
+let state = { level:0, learned:{}, best:{} };
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s) state = Object.assign(state, s); } catch(e){}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} };
+
+// ---------- SPEECH (uses your device's pt-BR voice) ----------
+let rate = 0.9, voice = null;
+function pickVoice(){
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => v.lang === "pt-BR" && /Luciana|Google|Felipe/i.test(v.name))
+       || vs.find(v => v.lang === "pt-BR") || vs.find(v => v.lang.startsWith("pt")) || null;
+}
+if ("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function say(text, r){
+  if (!("speechSynthesis" in window)) return alert("Speech isn't supported in this browser.");
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "pt-BR"; u.rate = r || rate; if (voice) u.voice = voice;
+  speechSynthesis.speak(u);
+}
+
+// ---------- HELPERS ----------
+const app = document.getElementById("app");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const shuffle = a => a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+const L = () => LEVELS[state.level];
+const lkey = (type,i) => `${state.level}-${type}-${i}`;
+const total = () => L().phrases.length + L().words.length;
+const learnedCount = () =>
+  L().phrases.filter((_,i)=>state.learned[lkey("p",i)]).length +
+  L().words.filter((_,i)=>state.learned[lkey("w",i)]).length;
+let currentView = "learn";
+
+function renderLevels(){
+  const bar = document.getElementById("levels");
+  bar.innerHTML = LEVELS.map((l,i)=>`<button data-l="${i}" class="${i===state.level?"on":""}">${esc(l.name)}</button>`).join("");
+  bar.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    state.level = +b.dataset.l; save(); renderLevels(); views[currentView]();
+  });
+}
+
+function controls(){
+  const pct = Math.round(learnedCount()/total()*100);
+  return `<div class="controls">
+    <span><b>${esc(L().name)}</b> · ${esc(L().desc)}</span>
+  </div>
+  <div class="controls">
+    <span>${learnedCount()}/${total()} learned</span>
+    <div class="progress"><div style="width:${pct}%"></div></div>
+    <label>Speed <input id="rate" type="range" min="0.5" max="1.2" step="0.1" value="${rate}"></label>
+  </div>`;
+}
+
+// ---------- LEARN ----------
+function viewLearn(){
+  const lv = L();
+  app.innerHTML = controls() + `<h2>5 phrases</h2>` + lv.phrases.map((p,i)=>`
+    <div class="card">
+      <div class="top">
+        <div><div class="pt">${i+1}. ${esc(p.pt)}</div><div class="en">${esc(p.en)}</div></div>
+        <label class="chk"><input type="checkbox" data-learn="${lkey("p",i)}" ${state.learned[lkey("p",i)]?"checked":""}> learned</label>
+      </div>
+      <div class="rows">
+        <div class="lbl">Pronunciation (IPA)</div><div class="ipa">${esc(p.ipa)}</div><div></div>
+        <div class="lbl">Full</div><div>${esc(p.full)}</div>
+          <button class="play" data-say="${esc(p.pt)}" data-slow="1">▶ slow</button>
+        <div class="lbl">Colloquial</div><div><span class="coll">${esc(p.collWritten)}</span> → ${esc(p.coll)}</div>
+          <button class="play alt" data-say="${esc(p.collWritten)}">▶ natural</button>
+      </div>
+      <div class="note">${esc(p.note)}</div>
+    </div>`).join("")
+  + `<h2>10 words</h2><div class="words">` + lv.words.map((w,i)=>`
+    <div class="word">
+      <div class="top"><div><div class="w">${esc(w.pt)}</div><div class="en">${esc(w.en)}</div></div>
+        <label class="chk"><input type="checkbox" data-learn="${lkey("w",i)}" ${state.learned[lkey("w",i)]?"checked":""}></label></div>
+      <div class="p"><span class="lbl">Full</span> ${esc(w.full)}</div>
+      <div class="p"><span class="lbl">Colloquial</span> ${w.collWritten ? `<span class="coll">${esc(w.collWritten)}</span> → ${esc(w.coll)}` : "same"}</div>
+      <div class="btns">
+        <button class="play" data-say="${esc(w.pt)}" data-slow="1">▶ slow</button>
+        ${w.collWritten ? `<button class="play alt" data-say="${esc(w.collWritten)}">▶ natural</button>` : ""}
+      </div>
+    </div>`).join("") + `</div>`;
+  document.getElementById("rate").oninput = e => rate = +e.target.value;
+  app.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say, b.dataset.slow?Math.min(rate,0.75):rate+0.15));
+  app.querySelectorAll("[data-learn]").forEach(c=>c.onchange=()=>{ state.learned[c.dataset.learn]=c.checked; save(); viewLearn(); });
+}
+
+// ---------- QUIZ / LISTENING (uses the selected level) ----------
+function items(){
+  return [
+    ...L().phrases.map(p=>({ en:p.en, answer:p.collWritten, speak:p.collWritten })),
+    ...L().words.map(w=>({ en:w.en, answer:w.pt, speak:w.pt }))
+  ];
+}
+function quizRound(kind){
+  const all = items(), order = shuffle(all.map((_,i)=>i));
+  let n = 0, score = 0;
+  const bestKey = `${state.level}-${kind}`;
+  const next = () => {
+    if (n >= order.length){
+      if (score > (state.best[bestKey]||0)){ state.best[bestKey] = score; save(); }
+      app.innerHTML = `<div class="card quiz"><div class="q">Score: ${score}/${order.length}</div>
+        <div class="en">Best on this level: ${state.best[bestKey]||0}/${order.length}</div>
+        <button class="big" id="again">Play again</button></div>`;
+      document.getElementById("again").onclick = () => quizRound(kind); return;
+    }
+    const i = order[n], it = all[i];
+    const opts = shuffle([i, ...shuffle(all.map((_,j)=>j).filter(j=>j!==i)).slice(0,3)]);
+    const prompt = kind==="listen"
+      ? `<button class="big" id="hear">▶ Play again</button><div class="en" style="margin-top:8px">What did you hear?</div>`
+      : `<div class="en">How do you say it (casually):</div><div class="q">“${esc(it.en)}”</div>`;
+    app.innerHTML = `<div class="card quiz"><div class="en">${esc(L().name)} · ${n+1} / ${order.length} · score ${score}</div>${prompt}
+      <div class="opts">${opts.map(j=>`<button data-o="${j}">${esc(kind==="listen"?all[j].en:all[j].answer)}</button>`).join("")}</div></div>`;
+    if (kind==="listen"){ document.getElementById("hear").onclick=()=>say(it.speak); say(it.speak); }
+    app.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{
+      const right = +b.dataset.o === i;
+      if (right) score++;
+      app.querySelectorAll("[data-o]").forEach(x=>{ x.disabled=true; if(+x.dataset.o===i) x.classList.add("ok"); });
+      if (!right) b.classList.add("no");
+      if (kind!=="listen") say(it.speak);
+      setTimeout(()=>{ n++; next(); }, 1400);
+    });
+  };
+  next();
+}
+
+// ---------- RIO SOUNDS ----------
+function viewSounds(){
+  app.innerHTML = `<div class="card"><div class="pt">What makes Rio sound like Rio</div>
+  <ul class="sounds">
+    <li><b>S before a consonant or at the end → “sh”.</b> mesmo = “MEZH-moo”, vamos = “VAH-moosh”.</li>
+    <li><b>T and D before an “i” sound → “tch” / “dj”.</b> tipo = “CHEE-poo”, onde = “OHN-djee”.</li>
+    <li><b>Unstressed final E → “ee”, final O → “oo”.</b> pode = “POH-djee”, tudo = “TOO-doo”.</li>
+    <li><b>R at the start, RR, or R before a consonant → breathy “h”.</b> Rio = “HEE-oo”, carro = “KAH-hoo”.</li>
+    <li><b>Final R on verbs is dropped.</b> falar → falá, ver → vê.</li>
+    <li><b>Final L → “w”.</b> legal = “leh-GOW”, Brasil = “brah-ZEEW”.</li>
+    <li><b>Common shortcuts:</b> você → cê, está → tá, estou → tô, para → pra, não → num, -ndo → -no.</li>
+  </ul></div>`;
+}
+
+const views = { learn:viewLearn, quiz:()=>quizRound("quiz"), listen:()=>quizRound("listen"), sounds:viewSounds };
+document.querySelectorAll("#modes button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#modes button").forEach(x=>x.classList.toggle("on", x===b));
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  currentView = b.dataset.view; views[currentView]();
+});
+if (state.level >= LEVELS.length) state.level = 0;
+renderLevels();
+viewLearn();
+</script>
+</body>
+</html>
